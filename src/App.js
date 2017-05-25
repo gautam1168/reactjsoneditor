@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
-import {Editor, EditorState, CompositeDecorator} from 'draft-js';
+import {Editor, EditorState, ContentState, CompositeDecorator} from 'draft-js';
 import './App.css';
 
 const styles = {
@@ -106,24 +106,74 @@ const styles = {
 		  );
 	  };
 
+class ParseBtn extends Component {
+	constructor(props) {
+		super(props);
+		this.handleClick = this.handleClick.bind(this)
+	}
+
+	handleClick(e) {
+		this.props.parseEditorText()
+	}
+
+	render() {
+		return (
+			<button onClick={this.handleClick}>Parse</button>
+		);
+	}
+}
+
+class JSONEditor extends Component {
+	constructor(props) {
+		super(props);
+		this.onChange = this.props.editorStateUpdator
+	}
+
+	render() {
+		return (
+			<Editor editorState={this.props.editorState}
+					onChange={this.onChange}
+					placeholder="Paste JSON here"
+					textAlignment="left"/>
+		);
+	}
+}
+
 class App extends Component {
   constructor(props) {
 	  super(props);
-
-	  const decorator = new CompositeDecorator([
-		  {
-			  strategy : attributeStrategy,
-			  component : AttributeSpan
-		  },
-		  {
-			  strategy : valueStrategy,
-			  component : ValueSpan
-		  }
+	  this.decorator = new CompositeDecorator([
+		{
+			strategy : attributeStrategy,
+			component : AttributeSpan
+		},
+		{
+			strategy : valueStrategy,
+			component : ValueSpan
+		}
 	  ])
-
-	  this.state = { editorState: EditorState.createEmpty(decorator) }
-	  this.onChange = (editorState) => this.setState({editorState});
+	  this.state = {
+		  editorState : EditorState.createEmpty(this.decorator)
+	  }
+	  this.parseEditorText = this.parseEditorText.bind(this)
+	  this.editorStateUpdator = this.editorStateUpdator.bind(this)
   }
+
+  editorStateUpdator(editorState){
+	  this.setState({editorState: editorState})
+  }
+
+  parseEditorText(){
+	  let contentState = this.state.editorState.getCurrentContent();
+	  let text = JSON.stringify(JSON.parse(contentState.getPlainText("")))
+	  text = text.replace(/{/g,"{\n")
+	  text = text.replace(/,/g,",\n")
+	  text = text.replace(/}/g,"\n}")
+	  let newContentState = ContentState.createFromText(text);
+	  let newEditorState = EditorState.createWithContent(newContentState, this.decorator)
+	  this.setState({editorState: newEditorState})
+  }
+
   render() {
     return (
       <div className="App">
@@ -131,10 +181,10 @@ class App extends Component {
           <img src={logo} className="App-logo" alt="logo" />
           <h2>Welcome to React</h2>
         </div>
-        <Editor editorState={this.state.editorState}
-				onChange={this.onChange}
-				placeholder="Paste JSON here"
-				textAlignment="left"/>
+			<ParseBtn editorState={this.state.editorState}
+					  parseEditorText={this.parseEditorText}/>
+			<JSONEditor editorState={this.state.editorState}
+						editorStateUpdator={this.editorStateUpdator}/>
       </div>
     );
   }

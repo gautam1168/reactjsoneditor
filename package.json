@@ -2,6 +2,7 @@
   "name": "jsoneditor",
   "version": "0.1.0",
   "private": true,
+  "homepage":"http://gautam1168.github.io/webpage/reactjsoneditor",
   "dependencies": {
     "draft-js": "^0.10.1",
     "react": "^15.5.4",
