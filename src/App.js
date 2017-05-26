@@ -165,11 +165,32 @@ class App extends Component {
 
   parseEditorText(){
 	  let contentState = this.state.editorState.getCurrentContent();
-	  let text = JSON.stringify(JSON.parse(contentState.getPlainText("")))
-	  text = text.replace(/{/g,"{\n")
-	  text = text.replace(/,/g,",\n")
-	  text = text.replace(/}/g,"\n}")
-	  let newContentState = ContentState.createFromText(text);
+	  let text, formattedText = ""
+	  try{
+		  text = JSON.stringify(JSON.parse(contentState.getPlainText("")))
+	  }
+	  catch (e){
+		  alert("Invalid JSON: ", e.toString())
+	  }
+	  let numtabs = 0
+	  for (var i = 0; i < text.length; i++){
+		  if (text[i] == "{"){
+			  formattedText += "{\n"+"\t".repeat(numtabs)
+			  numtabs += 1
+		  }
+		  else if (text[i] == "}"){
+			  numtabs -= 1
+			  formattedText += "\n"+"\t".repeat(numtabs)+"}"
+		  }
+		  else if (text[i] == ","){
+			  formattedText += ",\n"+"\t".repeat(numtabs)
+		  }
+		  else{
+			  formattedText += text[i]
+		  }
+	  }
+
+	  let newContentState = ContentState.createFromText(formattedText);
 	  let newEditorState = EditorState.createWithContent(newContentState, this.decorator)
 	  this.setState({editorState: newEditorState})
   }
