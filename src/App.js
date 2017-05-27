@@ -49,39 +49,40 @@ const styles = {
 		return ""
 	  }
 
-	  function searchQuotedString(predecessors, contentBlock, callback, contentState){
+	  function searchQuotedString(regex, contentBlock, callback, contentState){
 		const text = contentBlock.getText()
 		const key = contentBlock.getKey()
 
-  		let inreadzone = false, findingStartingQuot = true, start, end, previoustext;
+  		let inreadzone = false, findingStartingQuot = true, start, end;
+		let searchres
 
-		previoustext = getPreviousText(contentState, key)
-		if (predecessors.test(previoustext)){
-			inreadzone = true
+		while((searchres = regex.exec(text)) !== null){
+			callback(searchres.index, searchres.index + searchres[1].length)
 		}
-  		for (let i = 0; i < text.length; i++){
-			if (predecessors.test(text[i])){
-				inreadzone = true
-			}
-			if(text[i] === '"' && inreadzone && findingStartingQuot){
-  				start = i;
-  				findingStartingQuot = false;
-  			}
-  			else if (text[i] === '"' && inreadzone){
-  				end = i+1;
-  				callback(start, end);
-				findingStartingQuot = true;
-  				inreadzone = false;
-  			}
-  		}
+  // 		for (let i = 0; i < text.length; i++){
+		//
+		// 	if (test(text[i]) == ":" && findingStartingQuot && followingcolon){
+		// 		inreadzone = true
+		// 	}
+		// 	if(text[i] === '"' && inreadzone && findingStartingQuot){
+  // 				start = i;
+  // 				findingStartingQuot = false;
+  // 			}
+  // 			else if (text[i] === '"' && inreadzone){
+  // 				end = i+1;
+  // 				callback(start, end);
+		// 		findingStartingQuot = true;
+  // 				inreadzone = false;
+  // 			}
+  // 		}
 	  }
 
 	  function valueStrategy(contentBlock, callback, contentState) {
-		  searchQuotedString(/[:]/, contentBlock, callback, contentState)
+		  searchQuotedString(/:\s*("\w*")/g, contentBlock, callback, contentState)
 	  }
 
       function attributeStrategy(contentBlock, callback, contentState) {
-		  searchQuotedString(/[{,]/, contentBlock, callback, contentState)
+		  searchQuotedString(/("\w+")\s*:/g, contentBlock, callback, contentState)
       }
 
       const AttributeSpan = (props) => {
@@ -174,15 +175,15 @@ class App extends Component {
 	  }
 	  let numtabs = 0
 	  for (var i = 0; i < text.length; i++){
-		  if (text[i] == "{"){
-			  formattedText += "{\n"+"\t".repeat(numtabs)
+		  if (text[i] === "{"){
 			  numtabs += 1
+			  formattedText += "{\n"+"\t".repeat(numtabs)
 		  }
-		  else if (text[i] == "}"){
+		  else if (text[i] === "}"){
 			  numtabs -= 1
 			  formattedText += "\n"+"\t".repeat(numtabs)+"}"
 		  }
-		  else if (text[i] == ","){
+		  else if (text[i] === ","){
 			  formattedText += ",\n"+"\t".repeat(numtabs)
 		  }
 		  else{
@@ -191,8 +192,11 @@ class App extends Component {
 	  }
 
 	  let newContentState = ContentState.createFromText(formattedText);
-	  let newEditorState = EditorState.createWithContent(newContentState, this.decorator)
+	  let newEditorState = EditorState.createWithContent(newContentState)
 	  this.setState({editorState: newEditorState})
+	  window.setTimeout(()=>{
+	  	this.setState({editorState: EditorState.set(this.state.editorState, {decorator: this.decorator})})
+	},0)
   }
 
   render() {
