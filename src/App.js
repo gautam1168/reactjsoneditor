@@ -16,6 +16,14 @@ const styles = {
 	minHeight: 40,
 	padding: 10,
   },
+  editorContainer: {
+	width: "50%",
+	float: "left"
+  },
+  visualizerContainer: {
+	width: "50%",
+	float: "left"
+  },
   button: {
 	marginTop: 10,
 	textAlign: 'center',
@@ -59,22 +67,6 @@ const styles = {
 		while((searchres = regex.exec(text)) !== null){
 			callback(searchres.index, searchres.index + searchres[1].length)
 		}
-  // 		for (let i = 0; i < text.length; i++){
-		//
-		// 	if (test(text[i]) == ":" && findingStartingQuot && followingcolon){
-		// 		inreadzone = true
-		// 	}
-		// 	if(text[i] === '"' && inreadzone && findingStartingQuot){
-  // 				start = i;
-  // 				findingStartingQuot = false;
-  // 			}
-  // 			else if (text[i] === '"' && inreadzone){
-  // 				end = i+1;
-  // 				callback(start, end);
-		// 		findingStartingQuot = true;
-  // 				inreadzone = false;
-  // 			}
-  // 		}
 	  }
 
 	  function valueStrategy(contentBlock, callback, contentState) {
@@ -140,6 +132,49 @@ class JSONEditor extends Component {
 	}
 }
 
+class Visualizer extends Component {
+	constructor(props) {
+		super(props);
+	}
+	validDashboardJSON() {
+		let keyarray = Object.keys(this.props.layoutJSON)
+		let valid = true
+		valid = valid && keyarray.indexOf("totalrows") >= 0 &&
+					keyarray.indexOf("totalcols") >= 0 &&
+					keyarray.indexOf("blockHeight") >= 0 &&
+					keyarray.indexOf("widgets") >= 0
+		if (valid){
+			this.props.layoutJSON.widgets.forEach(wid => {
+				let widkeys = Object.keys(wid)
+				valid = valid && widkeys.indexOf("xpos") >= 0 &&
+							widkeys.indexOf("ypos") >= 0 &&
+							widkeys.indexOf("colspan") >= 0 &&
+							widkeys.indexOf("rowspan") >= 0 &&
+							widkeys.indexOf("index") >= 0
+			})
+		}
+		return valid
+	}
+	render() {
+		// console.log(this.validDashboardJSON())
+		if (this.validDashboardJSON()){
+			let widgetboxes = null
+			widgetboxes = this.props.layoutJSON.widgets.map(wid => {
+				return <rect x1={wid.xpos} y1={wid.ypos} width={wid.colspan} height={wid.rowspan}
+					  key={wid.index} fill={"none"} stroke={"#aaa"} strokeWidth={0.2}/>
+			})
+			// console.log(widgetboxes)
+			return (
+				<svg width={500} height={700} style={{border: "solid 1px #ccc"}}
+					 viewBox={`0 0 ${this.props.layoutJSON.totalrows} ${this.props.layoutJSON.totalcols}`}>
+					 { widgetboxes }
+				</svg>
+			);
+		}
+		return null
+	}
+}
+
 class App extends Component {
   constructor(props) {
 	  super(props);
@@ -200,6 +235,13 @@ class App extends Component {
   }
 
   render() {
+	let layoutOBJ
+	try{
+		layoutOBJ = JSON.parse(this.state.editorState.getCurrentContent().getPlainText())
+	}
+	catch(e){
+		layoutOBJ = {}
+	}
     return (
       <div className="App">
         <div className="App-header">
@@ -208,9 +250,14 @@ class App extends Component {
         </div>
 			<ParseBtn editorState={this.state.editorState}
 					  parseEditorText={this.parseEditorText}/>
-			<JSONEditor editorState={this.state.editorState}
+		    <div style={styles.editorContainer}>
+				<JSONEditor editorState={this.state.editorState}
 						editorStateUpdator={this.editorStateUpdator}/>
-      </div>
+			</div>
+			<div style={styles.visualizerContainer}>
+				<Visualizer layoutJSON={layoutOBJ}/>
+			</div>
+	  </div>
     );
   }
 }
