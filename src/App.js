@@ -160,11 +160,15 @@ class Visualizer extends Component {
 		if (this.validDashboardJSON()){
 			let widgetboxes = null
 			widgetboxes = this.props.layoutJSON.widgets.map(wid => {
-				return <rect x={parseInt(wid.xpos)*100/parseInt(this.props.layoutJSON.totalcols)}
-							 y={parseInt(wid.ypos)*100/parseInt(this.props.layoutJSON.totalcols)}
+				let xpos = parseInt(wid.xpos)*100/parseInt(this.props.layoutJSON.totalcols)
+				let ypos = parseInt(wid.ypos)*100/parseInt(this.props.layoutJSON.totalrows)
+				return <g key={wid.index}>
+					  	<rect x={xpos} y={ypos}
 							width={100*parseInt(wid.colspan)/parseInt(this.props.layoutJSON.totalcols)}
 							height={100*parseInt(wid.rowspan)/parseInt(this.props.layoutJSON.totalcols)}
-					  key={wid.index} fill={"none"} stroke={"#aaa"} strokeWidth={0.2}/>
+					  		fill={"none"} stroke={"#aaa"} strokeWidth={0.2}/>
+					  	<text x={xpos+2} y={ypos+4} fontSize={3}>{wid.type}</text>
+					   </g>
 			})
 			// console.log(widgetboxes)
 			return (
