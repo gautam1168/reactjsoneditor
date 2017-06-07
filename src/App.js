@@ -195,8 +195,12 @@ class App extends Component {
 			component : ValueSpan
 		}
 	  ])
+	  let initcontentstate = ContentState.createFromText(`{ "totalcols":60,
+	  "totalrows":50, "blockHeight":20, "widgets":[{ "xpos":1, "ypos":1,
+	  "rowspan":10, "colspan":30, "index":1, "type":"BADGE" }, { "xpos":"32",
+	  "ypos":"1", "rowspan":"20", "colspan":"10", "index":2, "type":"fksla" }] }`)
 	  this.state = {
-		  editorState : EditorState.createEmpty(this.decorator)
+		  editorState : EditorState.createWithContent(initcontentstate, this.decorator)
 	  }
 	  this.parseEditorText = this.parseEditorText.bind(this)
 	  this.editorStateUpdator = this.editorStateUpdator.bind(this)
@@ -252,8 +256,7 @@ class App extends Component {
     return (
       <div className="App">
         <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
+          <h2>JSON Editor</h2>
         </div>
 			<ParseBtn editorState={this.state.editorState}
 					  parseEditorText={this.parseEditorText}/>
